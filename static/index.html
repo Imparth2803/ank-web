@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ANK Statement Generator — TYP Connect</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F5F0E8;--bg-dark:#EDE8DF;--card:#FFFDF9;--navy:#1A1A2E;--red:#C8392B;--red-dark:#A82D22;--green:#2D7D46;--blue:#1E3A5F;--blue-hover:#2A4F80;--text:#1A1A2E;--muted:#8A7F72;--light:#B0A898;--border:#D4CFC6;--sidebar-bg:#1A1A2E;--sidebar-sel:#2A2A4E;--warning:#E8A020;--shadow:0 2px 16px rgba(26,26,46,.10);--radius:12px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+.hidden{display:none!important;}
+/* AUTH */
+#auth-screen{min-height:100vh;display:flex;flex-direction:column;}
+.auth-header{background:var(--navy);padding:20px 32px;text-align:center;}
+.auth-header .brand{font-family:'DM Serif Display',serif;font-size:22px;color:#F5F0E8;}
+.auth-header .brand span{color:var(--red);}
+.auth-header .sub{font-size:12px;color:#8A8AAA;letter-spacing:1px;margin-top:4px;}
+.auth-body{flex:1;display:flex;align-items:center;justify-content:center;padding:32px 16px;}
+.auth-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:36px 36px 28px;width:100%;max-width:460px;box-shadow:var(--shadow);}
+.auth-title{font-family:'DM Serif Display',serif;font-size:24px;margin-bottom:4px;color:var(--navy);}
+.auth-sub{font-size:13px;color:var(--muted);margin-bottom:24px;}
+.tc-box{height:190px;overflow-y:auto;background:var(--bg-dark);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:11px;line-height:1.7;color:#555;margin-bottom:10px;white-space:pre-wrap;}
+.tc-check-row{display:flex;align-items:center;gap:8px;margin-bottom:16px;font-size:12px;color:var(--text);}
+.tc-check-row input{width:16px;height:16px;accent-color:var(--red);}
+.reg-scroll{max-height:85vh;overflow-y:auto;padding-right:4px;}
+/* APP SHELL */
+#app{display:flex;min-height:100vh;}
+.sidebar{width:240px;min-width:240px;background:var(--sidebar-bg);display:flex;flex-direction:column;height:100vh;position:sticky;top:0;overflow:hidden;}
+.sidebar-top{padding:16px 14px 12px;border-bottom:1px solid #222233;}
+.sidebar-brand{font-size:10px;font-weight:700;color:#555577;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;}
+.sidebar-user{display:flex;align-items:center;gap:10px;}
+.sidebar-avatar{width:36px;height:36px;border-radius:50%;background:var(--sidebar-sel);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.sidebar-name{font-size:13px;font-weight:600;color:#F5F0E8;}
+.sidebar-co{font-size:10px;color:#8A8AAA;}
+.sidebar-sec{font-size:10px;font-weight:700;color:#555577;letter-spacing:1px;text-transform:uppercase;padding:14px 14px 6px;}
+.company-list{flex:1;overflow-y:auto;padding:0 8px;}
+.company-row{display:flex;align-items:center;gap:4px;margin-bottom:3px;}
+.co-btn{flex:1;background:transparent;border:none;color:#F5F0E8;font-family:'DM Sans',sans-serif;font-size:12px;text-align:left;padding:8px 10px;border-radius:6px;cursor:pointer;transition:background .15s;}
+.co-btn:hover,.co-btn.active{background:var(--sidebar-sel);}
+.co-del{background:transparent;border:none;color:#555566;cursor:pointer;padding:4px 6px;border-radius:4px;font-size:14px;line-height:1;}
+.co-del:hover{background:#3D1010;color:var(--red);}
+.sidebar-add{padding:8px 10px;border-top:1px solid #222233;border-bottom:1px solid #222233;}
+.sidebar-add input{width:100%;background:#1A2030;border:1px solid #333355;color:#F5F0E8;padding:6px 10px;border-radius:6px;font-size:11px;font-family:'DM Sans',sans-serif;outline:none;}
+.sidebar-add input::placeholder{color:#555577;}
+.sb-add-btn{width:100%;margin-top:5px;background:var(--blue);color:#fff;border:none;padding:6px;border-radius:6px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.sb-add-btn:hover{background:var(--blue-hover);}
+.sidebar-bottom{padding:8px 10px;}
+.sb-action{width:100%;background:transparent;border:1px solid #333355;color:#8A8AAA;padding:7px;border-radius:6px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:5px;}
+.sb-action:hover{background:#1A2030;}
+.sb-signout{width:100%;background:transparent;border:1px solid #3D1515;color:#AA5555;padding:7px;border-radius:6px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.sb-signout:hover{background:#1A0808;}
+/* MAIN */
+.main-content{flex:1;display:flex;flex-direction:column;min-height:100vh;overflow-y:auto;}
+.top-bar{background:var(--navy);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;}
+.top-brand{font-family:'DM Serif Display',serif;font-size:18px;color:#F5F0E8;}
+.top-brand span{color:var(--red);}
+.top-sub{font-size:11px;color:#8A8AAA;letter-spacing:1px;text-transform:uppercase;}
+/* STEP BAR */
+.step-bar{display:flex;background:var(--card);border-bottom:1px solid var(--border);}
+.step{flex:1;padding:13px 8px;text-align:center;font-size:11px;font-weight:500;color:var(--muted);border-right:1px solid var(--border);cursor:default;transition:all .2s;letter-spacing:.3px;}
+.step:last-child{border-right:none;}
+.step.done{color:var(--green);background:#F0FAF4;}
+.step.active{color:var(--red);background:#FFF5F4;font-weight:700;}
+/* SCREENS */
+.screen{padding:28px 32px 48px;display:none;}
+.screen.active{display:block;}
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:26px 28px;box-shadow:var(--shadow);margin-bottom:16px;}
+.card-title{font-family:'DM Serif Display',serif;font-size:20px;margin-bottom:4px;color:var(--navy);}
+.card-sub{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5;}
+.sec-label{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#4A4560;margin:18px 0 10px;}
+/* FORM */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.field{margin-bottom:4px;}
+.field label{display:block;font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#4A4560;margin-bottom:5px;}
+.field label .req{color:var(--red);margin-left:2px;}
+.field label .opt{font-weight:400;text-transform:none;letter-spacing:0;font-size:11px;color:var(--muted);margin-left:4px;}
+input[type=text],input[type=email],input[type=password],input[type=number]{width:100%;height:40px;padding:0 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:var(--bg);outline:none;transition:border-color .15s;}
+input:focus{border-color:var(--navy);}
+/* BUTTONS */
+.btn{height:44px;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;padding:0 20px;}
+.btn-primary{background:var(--red);color:#fff;}
+.btn-primary:hover:not(:disabled){background:var(--red-dark);}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;}
+.btn-outline{background:transparent;color:var(--text);border:1.5px solid var(--border);height:40px;font-size:13px;}
+.btn-outline:hover{border-color:var(--navy);}
+.btn-green{background:var(--green);color:#fff;}
+.btn-green:hover{background:#236138;}
+.btn-block{width:100%;}
+.nav-row{display:flex;gap:12px;margin-top:24px;align-items:center;}
+.nav-row .btn-back{width:110px;flex-shrink:0;}
+.nav-row .btn-next{flex:1;}
+/* ALERTS */
+.alert{padding:11px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;line-height:1.5;}
+.alert-error{background:#FFF0EE;border:1px solid #F5C0BA;color:#8B2020;}
+.alert-success{background:#F0FAF4;border:1px solid #B8E6C8;color:#1A5C30;}
+.alert-info{background:#EEF2FF;border:1px solid #C4D0FF;color:#2A3A8A;}
+/* SPINNER */
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+/* TYPE CARDS */
+.type-cards{display:flex;gap:20px;margin:16px 0;}
+.type-card{flex:1;background:var(--card);border:2px solid var(--border);border-radius:var(--radius);padding:28px 20px;text-align:center;cursor:pointer;transition:all .2s;}
+.type-card:hover{border-color:var(--muted);}
+.type-card.selected{border-color:var(--red);background:#FFF5F4;}
+.type-card .tc-icon{font-size:40px;margin-bottom:8px;}
+.type-card .tc-title{font-size:18px;font-weight:700;color:var(--navy);margin-bottom:8px;}
+.type-card .tc-desc{font-size:12px;color:var(--muted);line-height:1.6;}
+/* UPLOAD */
+.dropzone{border:2px dashed var(--border);border-radius:10px;padding:28px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg);}
+.dropzone:hover,.dropzone.drag-over{border-color:var(--red);background:#FFF5F4;}
+.dz-icon{font-size:32px;margin-bottom:8px;}
+.dz-text{font-size:14px;color:var(--muted);}
+.dz-text strong{color:var(--red);}
+.file-list{margin-top:12px;display:flex;flex-direction:column;gap:8px;}
+.file-chip{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;}
+.fc-num{font-size:12px;font-weight:700;color:var(--red);width:22px;flex-shrink:0;}
+.fc-name{flex:1;font-size:13px;font-weight:500;color:var(--navy);}
+.fc-rows{font-size:11px;color:var(--muted);}
+.fc-remove{cursor:pointer;color:var(--muted);font-size:16px;padding:2px 6px;border-radius:4px;border:none;background:transparent;}
+.fc-remove:hover{background:#FFE0E0;color:var(--red);}
+/* INFO BOX */
+.info-box{background:#1A2030;border-radius:8px;padding:12px 14px;font-size:11px;color:#8A8AAA;line-height:1.7;margin-bottom:12px;}
+/* RENAME */
+.rename-row{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:10px;}
+.rename-src{font-size:11px;color:var(--muted);margin-bottom:8px;}
+.rename-src strong{color:var(--navy);}
+.rename-input-row{display:flex;align-items:center;gap:8px;}
+.rename-ext{font-size:13px;color:var(--muted);white-space:nowrap;}
+/* RESULTS */
+.result-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:10px;display:flex;align-items:flex-start;gap:14px;}
+.result-icon{font-size:24px;flex-shrink:0;margin-top:2px;}
+.result-body{flex:1;}
+.result-filename{font-size:14px;font-weight:600;color:var(--navy);margin-bottom:6px;}
+.result-status{font-size:12px;color:var(--muted);}
+.result-status.ok{color:var(--green);}
+.result-status.err{color:var(--red);}
+.result-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
+.rs-cell{background:var(--bg);border-radius:6px;padding:8px 10px;}
+.rs-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);}
+.rs-value{font-size:15px;font-weight:600;color:var(--navy);margin-top:2px;}
+.rs-value.dr{color:var(--red);}
+.rs-value.cr{color:var(--green);}
+.result-actions{display:flex;flex-direction:column;gap:8px;flex-shrink:0;}
+/* COMPANY BADGE */
+.co-badge{display:inline-flex;align-items:center;gap:6px;background:#F0FAF4;border:1px solid #B8E6C8;border-radius:20px;padding:4px 12px;font-size:12px;color:var(--green);font-weight:500;margin-bottom:16px;}
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:1000;}
+.modal{background:var(--card);border-radius:var(--radius);padding:28px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.2);}
+.modal-title{font-family:'DM Serif Display',serif;font-size:20px;color:var(--navy);margin-bottom:4px;}
+.modal-sub{font-size:13px;color:var(--muted);margin-bottom:20px;}
+.admin-tabs{display:flex;gap:0;margin-bottom:20px;background:var(--bg);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.admin-tab{flex:1;padding:10px;text-align:center;font-size:12px;font-weight:600;border:none;background:transparent;cursor:pointer;color:var(--muted);border-right:1px solid var(--border);}
+.admin-tab:last-child{border-right:none;}
+.admin-tab.active{background:var(--navy);color:#fff;}
+.admin-tab-pane{display:none;}
+.admin-tab-pane.active{display:block;}
+.data-table{width:100%;border-collapse:collapse;font-size:12px;}
+.data-table th{background:var(--navy);color:#F5F0E8;padding:8px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;}
+.data-table td{padding:9px 10px;border-bottom:1px solid var(--border);color:var(--text);}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table tr:hover td{background:var(--bg);}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;}
+.badge-green{background:#E0F5E9;color:var(--green);}
+.badge-red{background:#FFF0EE;color:var(--red);}
+.badge-gray{background:var(--bg-dark);color:var(--muted);}
+@media(max-width:768px){.sidebar{display:none;}.grid-2{grid-template-columns:1fr;}.type-cards{flex-direction:column;}.result-summary{grid-template-columns:1fr 1fr;}.screen{padding:16px 16px 48px;}}
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-header">
+    <div class="brand">TYP<span>.</span>Connect</div>
+    <div class="sub">ANK Statement Generator</div>
+  </div>
+  <div class="auth-body">
+    <!-- LOGIN -->
+    <div class="auth-card" id="login-card">
+      <div class="auth-title">Welcome Back</div>
+      <div class="auth-sub">Sign in to your account</div>
+      <div id="login-error" class="alert alert-error hidden"></div>
+      <div class="field" style="margin-bottom:14px;">
+        <label>Email Address</label>
+        <input type="email" id="login-email" placeholder="you@example.com">
+      </div>
+      <div class="field" style="margin-bottom:18px;">
+        <label>Password</label>
+        <input type="password" id="login-pwd" placeholder="••••••••"
+               onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button class="btn btn-primary btn-block" id="login-btn" onclick="doLogin()">Sign In</button>
+      <button class="btn btn-outline btn-block" style="margin-top:10px;" onclick="showRegister()">
+        Don't have an account? Register →
+      </button>
+    </div>
+    <!-- REGISTER -->
+    <div class="auth-card hidden" id="register-card" style="max-width:500px;">
+      <div class="reg-scroll">
+        <div class="auth-title">Create Account</div>
+        <div class="auth-sub">Enter your details and invite code</div>
+        <div id="reg-error" class="alert alert-error hidden"></div>
+        <div class="grid-2" style="margin-bottom:14px;">
+          <div class="field"><label>Full Name <span class="req">*</span></label>
+            <input type="text" id="reg-name" placeholder="Parth Thakkar"></div>
+          <div class="field"><label>Email <span class="req">*</span></label>
+            <input type="email" id="reg-email" placeholder="you@example.com"></div>
+        </div>
+        <div class="grid-2" style="margin-bottom:14px;">
+          <div class="field"><label>Password <span class="req">*</span></label>
+            <input type="password" id="reg-pwd" placeholder="Min. 8 characters"></div>
+          <div class="field"><label>Company Name <span class="req">*</span></label>
+            <input type="text" id="reg-company" placeholder="Your Company"></div>
+        </div>
+        <div class="field" style="margin-bottom:16px;">
+          <label>Invite Code <span class="req">*</span></label>
+          <input type="text" id="reg-code" placeholder="XXXX-XXXX-XXXX"
+                 style="font-family:monospace;letter-spacing:2px;text-transform:uppercase;">
+        </div>
+        <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:8px;">Terms &amp; Conditions</div>
+        <div class="tc-box" id="tc-text"></div>
+        <div class="tc-check-row">
+          <input type="checkbox" id="tc-check">
+          <label for="tc-check">I have read, understood, and agree to the Terms &amp; Conditions</label>
+        </div>
+        <button class="btn btn-primary btn-block" id="reg-btn" onclick="doRegister()">Create Account</button>
+        <button class="btn btn-outline btn-block" style="margin-top:8px;" onclick="showLogin()">← Back to Sign In</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" class="hidden">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-brand">TYP Connect</div>
+      <div class="sidebar-user">
+        <div class="sidebar-avatar">👤</div>
+        <div>
+          <div class="sidebar-name" id="sb-name">—</div>
+          <div class="sidebar-co" id="sb-co">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-sec">Companies</div>
+    <div class="company-list" id="company-list"></div>
+    <div class="sidebar-add">
+      <input type="text" id="new-company" placeholder="New company…"
+             onkeydown="if(event.key==='Enter')addCompany()">
+      <button class="sb-add-btn" onclick="addCompany()">+ Add Company</button>
+    </div>
+    <div class="sidebar-bottom">
+      <button class="sb-action" onclick="openAdmin()">⚙  Admin Panel</button>
+      <button class="sb-signout" onclick="doLogout()">↩  Sign Out</button>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+    <div class="top-bar">
+      <div class="top-brand">ANK<span>.</span>Generator</div>
+      <div class="top-sub">TYP Connect</div>
+    </div>
+    <div class="step-bar">
+      <div class="step active" id="sb-1">① Type</div>
+      <div class="step" id="sb-2">② Upload</div>
+      <div class="step" id="sb-3">③ Parameters</div>
+      <div class="step" id="sb-4">④ Rename</div>
+      <div class="step" id="sb-5">⑤ Export</div>
+    </div>
+
+    <!-- SCREEN 1: TYPE -->
+    <div class="screen active" id="screen-1">
+      <div id="co-badge" class="co-badge hidden">🏢 <span id="co-badge-name">—</span></div>
+      <div class="card">
+        <div class="card-title">Step 1 — What type of ledger?</div>
+        <div class="card-sub">This determines how Debit and Credit columns are interpreted in the ANK calculation.</div>
+        <div class="type-cards">
+          <div class="type-card selected" id="tc-sale" onclick="selectType('sale')">
+            <div class="tc-icon">📤</div>
+            <div class="tc-title">SALE</div>
+            <div class="tc-desc">You are the seller.<br>Debit = customer owes you.<br>Credit = customer paid back.</div>
+          </div>
+          <div class="type-card" id="tc-purchase" onclick="selectType('purchase')">
+            <div class="tc-icon">📥</div>
+            <div class="tc-title">PURCHASE</div>
+            <div class="tc-desc">You are the buyer.<br>Debit = you paid supplier.<br>Credit = supplier owes you back.</div>
+          </div>
+        </div>
+        <div class="nav-row">
+          <button class="btn btn-primary btn-next" onclick="showScreen(2)">Continue → Upload Files</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 2: UPLOAD -->
+    <div class="screen" id="screen-2">
+      <div class="card">
+        <div class="card-title">Step 2 — Upload Ledger Files</div>
+        <div class="card-sub">Upload 1 to 5 Excel or CSV files. One output Excel will be generated per file.</div>
+        <div id="upload-error" class="alert alert-error hidden"></div>
+        <div class="dropzone" id="dropzone"
+             onclick="document.getElementById('file-input').click()"
+             ondragover="event.preventDefault();this.classList.add('drag-over')"
+             ondragleave="this.classList.remove('drag-over')"
+             ondrop="handleDrop(event)">
+          <input type="file" id="file-input" accept=".xlsx,.xls,.csv" multiple
+                 style="display:none" onchange="handleFileSelect(event)">
+          <div class="dz-icon">📂</div>
+          <div class="dz-text"><strong>Click to choose</strong> or drag &amp; drop<br>
+            <span style="font-size:12px;">Excel (.xlsx, .xls) or CSV — max 5 files</span></div>
+        </div>
+        <div class="file-list" id="file-list"></div>
+        <div class="nav-row">
+          <button class="btn btn-outline btn-back" onclick="showScreen(1)">← Back</button>
+          <button class="btn btn-primary btn-next" id="upload-next-btn"
+                  onclick="goToParams()" disabled>Continue → Parameters</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: PARAMETERS -->
+    <div class="screen" id="screen-3">
+      <div class="card">
+        <div class="card-title">Step 3 — Set Parameters</div>
+        <div class="card-sub">Interest rate must be entered manually. Other fields can be edited freely.</div>
+        <div id="params-error" class="alert alert-error hidden"></div>
+        <div class="sec-label">Party Details</div>
+        <div class="grid-2">
+          <div class="field"><label>Company Name</label>
+            <input type="text" id="p-company" placeholder="Your company name"></div>
+          <div class="field"><label>Client Name</label>
+            <input type="text" id="p-client" placeholder="Client / party name"></div>
+        </div>
+        <div class="sec-label">Date Range</div>
+        <div class="grid-2">
+          <div class="field"><label>From Date</label>
+            <input type="text" id="p-from" placeholder="DD-MM-YYYY"></div>
+          <div class="field"><label>To Date</label>
+            <input type="text" id="p-to" placeholder="DD-MM-YYYY"></div>
+        </div>
+        <div class="sec-label">Interest</div>
+        <div class="grid-2">
+          <div class="field"><label>Interest Rate (%) <span class="req">*</span></label>
+            <input type="number" id="p-rate" placeholder="e.g. 1.5" step="0.1" min="0"></div>
+          <div class="field"><label>Manual Interest <span class="opt">(optional — overrides formula)</span></label>
+            <input type="number" id="p-manual" placeholder="Leave blank to use formula" step="0.01" min="0"></div>
+        </div>
+        <div class="info-box">Leave Manual Interest blank to use formula: (Total Debit × Rate) / 30</div>
+        <div class="sec-label">Day Offsets <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:11px;color:var(--muted);">(optional)</span></div>
+        <div class="info-box">
+          <strong style="color:#F5F0E8;">Debit Days</strong> — credit period you give the buyer (reduces DR ANK).<br>
+          <strong style="color:#F5F0E8;">Credit Days</strong> — credit period you received from supplier (reduces CR ANK).
+        </div>
+        <div class="grid-2">
+          <div class="field"><label>Debit Days</label>
+            <input type="number" id="p-drdays" value="0" min="0" step="1"></div>
+          <div class="field"><label>Credit Days</label>
+            <input type="number" id="p-crdays" value="0" min="0" step="1"></div>
+        </div>
+        <div class="nav-row">
+          <button class="btn btn-outline btn-back" onclick="showScreen(2)">← Back</button>
+          <button class="btn btn-primary btn-next" onclick="goToRename()">Continue → Rename Files</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 4: RENAME -->
+    <div class="screen" id="screen-4">
+      <div class="card">
+        <div class="card-title">Step 4 — Name Your Output Files</div>
+        <div class="card-sub">Each input file produces one output Excel. Edit filenames below — .xlsx added automatically.</div>
+        <div id="rename-error" class="alert alert-error hidden"></div>
+        <div id="rename-rows"></div>
+        <div class="nav-row">
+          <button class="btn btn-outline btn-back" onclick="showScreen(3)">← Back</button>
+          <button class="btn btn-primary btn-next" onclick="goToExport()">Continue → Export</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 5: EXPORT -->
+    <div class="screen" id="screen-5">
+      <div class="card">
+        <div class="card-title">Step 5 — Generate &amp; Download</div>
+        <div class="card-sub">Click Generate to process all files. Download each output individually.</div>
+        <div id="export-error" class="alert alert-error hidden"></div>
+        <button class="btn btn-primary btn-block" id="gen-btn" onclick="generateAll()"
+                style="height:50px;font-size:15px;margin-bottom:16px;">
+          ⚡ Generate &amp; Download All
+        </button>
+        <div id="results-area"></div>
+        <div class="nav-row" style="margin-top:16px;">
+          <button class="btn btn-outline btn-back" onclick="showScreen(4)">← Back</button>
+          <button class="btn btn-outline btn-next" onclick="startOver()" style="color:var(--muted);">
+            ↺ Start New Statement
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN MODAL -->
+<div class="modal-overlay hidden" id="admin-overlay"
+     onclick="if(event.target===this)closeAdmin()">
+  <div class="modal">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <div class="modal-title">Admin Panel</div>
+      <button onclick="closeAdmin()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);">✕</button>
+    </div>
+    <div class="modal-sub">TYP Connect — Manage users and invite codes</div>
+    <!-- Auth gate -->
+    <div id="admin-auth">
+      <div id="admin-auth-err" class="alert alert-error hidden"></div>
+      <div class="field" style="margin-bottom:12px;">
+        <label>Admin Password</label>
+        <input type="password" id="admin-pwd" placeholder="Enter admin password"
+               onkeydown="if(event.key==='Enter')checkAdminAuth()">
+      </div>
+      <button class="btn btn-primary btn-block" onclick="checkAdminAuth()">🔒 Unlock</button>
+    </div>
+    <!-- Panel -->
+    <div id="admin-panel" class="hidden">
+      <div class="admin-tabs">
+        <button class="admin-tab active" onclick="switchTab('invites')">Invite Codes</button>
+        <button class="admin-tab" onclick="switchTab('users')">Users</button>
+      </div>
+      <div class="admin-tab-pane active" id="tab-pane-invites">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="generateInvite()" style="height:38px;font-size:13px;">
+            ⚡ Generate New Code
+          </button>
+          <span id="new-code-display" style="font-family:monospace;font-size:14px;color:var(--green);font-weight:600;letter-spacing:2px;"></span>
+        </div>
+        <div id="invites-table"></div>
+      </div>
+      <div class="admin-tab-pane" id="tab-pane-users">
+        <div id="users-table"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const TC_TEXT=`TYP CONNECT — TERMS & CONDITIONS
+ANK Days Interest Calculation Software
+typconnect25@gmail.com | Mumbai, India
+
+1. NATURE OF SOFTWARE & DISCLAIMER
+1.1 The Software does not provide any financial advice, accounting services, legal opinion, audit certification, or tax guidance.
+1.2 Not a substitute for a qualified Chartered Accountant, Auditor, or legal professional.
+1.3 Does not connect to any external financial system, bank, GST portal, or government database.
+1.4 Uses the traditional ANK Days calculation method.
+
+2. SUBSCRIPTION TERMS
+2.1 Subscription is valid for 12 months from date of activation.
+2.2 A mandatory locking period of 6 months applies. No refunds during this period.
+2.3 After locking period, cancellation requires 30 days written notice.
+
+3. PAYMENT & BILLING
+3.1 Subscription fees must be paid in advance. Annual billing applies.
+3.2 All fees are exclusive of applicable GST and other statutory levies.
+
+4. USER ACCESS & SECURITY
+4.1 Sharing of login credentials is strictly prohibited.
+4.2 Users are solely responsible for maintaining credential confidentiality.
+
+5. DATA, STORAGE & RETENTION
+5.1 The Client's uploaded data is their exclusive property.
+5.2 Upon termination, the Client must export all data within 30 days.
+
+6. CLIENT RESPONSIBILITIES
+6.1 Client is solely responsible for accuracy of uploaded ledger data.
+6.2 Client must verify all Output independently before any external or legal use.
+
+10. LIMITATION OF LIABILITY
+10.1 TYP CONNECT makes no warranty that Output will be accurate for any specific purpose.
+10.2 Maximum liability shall not exceed total subscription fees paid in preceding 3 months.
+
+11. PERMITTED USE
+11.1 May only be used for lawful business purposes — ANK Days interest calculation.
+11.2 Reverse-engineering, copying, or redistributing is strictly prohibited.
+
+12. INTELLECTUAL PROPERTY
+12.1 The ANK calculation logic, interface, and algorithms are exclusive IP of TYP CONNECT.
+
+15. GOVERNING LAW
+15.1 Governed by the laws of India. Disputes: binding arbitration, Mumbai.
+
+By registering, you confirm you have read and agree to all Terms & Conditions above.`;
+
+const S={token:null,user:null,selectedCompanyId:null,selectedCompanyName:null,
+         ledgerType:'sale',files:[],fileRowCounts:{},outputNames:[],jobResults:[]};
+
+const $=id=>document.getElementById(id);
+const fmt=n=>new Intl.NumberFormat('en-IN',{maximumFractionDigits:2}).format(n);
+function showErr(id,msg){const e=$(id);e.textContent=msg;e.classList.remove('hidden');}
+function hideErr(id){$(id).classList.add('hidden');}
+function setBtn(id,loading,label){const b=$(id);b.disabled=loading;b.innerHTML=loading?`<span class="spinner"></span>${label||'Processing…'}`:label;}
+
+function showScreen(n){
+  for(let i=1;i<=5;i++){
+    $(`screen-${i}`).classList.remove('active');
+    const sb=$(`sb-${i}`);sb.className='step';
+    if(i<n)sb.classList.add('done');else if(i===n)sb.classList.add('active');
+  }
+  $(`screen-${n}`).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+async function apiFetch(path,opts={}){
+  const h={'Content-Type':'application/json',...(opts.headers||{})};
+  if(S.token&&!opts.noAuth)h['Authorization']=`Bearer ${S.token}`;
+  const res=await fetch(path,{...opts,headers:h});
+  return res;
+}
+async function apiJSON(path,body,method='POST'){
+  const isForm=body instanceof FormData;
+  const h={};if(!isForm)h['Content-Type']='application/json';
+  if(S.token)h['Authorization']=`Bearer ${S.token}`;
+  const res=await fetch(path,{method,headers:h,body:isForm?body:JSON.stringify(body)});
+  const d=await res.json().catch(()=>({}));
+  if(!res.ok)throw new Error(d.detail||'Request failed');
+  return d;
+}
+
+// ── AUTH ──
+document.addEventListener('DOMContentLoaded',()=>{
+  $('tc-text').textContent=TC_TEXT;
+  const saved=sessionStorage.getItem('ank_session');
+  if(saved){const d=JSON.parse(saved);S.token=d.token;S.user=d.user;bootApp();}
+});
+function showLogin(){$('register-card').classList.add('hidden');$('login-card').classList.remove('hidden');}
+function showRegister(){$('login-card').classList.add('hidden');$('register-card').classList.remove('hidden');}
+async function doLogin(){
+  hideErr('login-error');
+  const email=$('login-email').value.trim(),pwd=$('login-pwd').value;
+  if(!email||!pwd){showErr('login-error','Please enter email and password.');return;}
+  setBtn('login-btn',true,'Signing in…');
+  try{
+    const d=await apiJSON('/api/auth/login',{email,password:pwd});
+    S.token=d.token;S.user={id:d.user_id,full_name:d.full_name,email:d.email,company_name:d.company_name};
+    sessionStorage.setItem('ank_session',JSON.stringify({token:S.token,user:S.user}));
+    bootApp();
+  }catch(e){showErr('login-error',e.message);setBtn('login-btn',false,'Sign In');}
+}
+async function doRegister(){
+  hideErr('reg-error');
+  const full_name=$('reg-name').value.trim(),email=$('reg-email').value.trim(),
+        password=$('reg-pwd').value,company_name=$('reg-company').value.trim(),
+        invite_code=$('reg-code').value.trim().toUpperCase(),tc=$('tc-check').checked;
+  if(!full_name||!email||!password||!company_name||!invite_code){showErr('reg-error','All fields are required.');return;}
+  if(password.length<8){showErr('reg-error','Password must be at least 8 characters.');return;}
+  if(!tc){showErr('reg-error','You must accept the Terms & Conditions.');return;}
+  setBtn('reg-btn',true,'Creating account…');
+  try{
+    const d=await apiJSON('/api/auth/register',{full_name,email,password,company_name,invite_code,tc_accepted:true});
+    S.token=d.token;S.user={id:d.user_id,full_name:d.full_name,email:d.email,company_name:d.company_name};
+    sessionStorage.setItem('ank_session',JSON.stringify({token:S.token,user:S.user}));
+    bootApp();
+  }catch(e){showErr('reg-error',e.message);setBtn('reg-btn',false,'Create Account');}
+}
+function doLogout(){
+  S.token=null;S.user=null;sessionStorage.removeItem('ank_session');
+  $('app').classList.add('hidden');$('auth-screen').classList.remove('hidden');showLogin();
+}
+
+// ── BOOT ──
+function bootApp(){
+  $('auth-screen').classList.add('hidden');$('app').classList.remove('hidden');
+  $('sb-name').textContent=S.user.full_name;$('sb-co').textContent=S.user.company_name;
+  loadCompanies();showScreen(1);
+}
+
+// ── COMPANIES ──
+async function loadCompanies(){
+  try{const res=await apiFetch('/api/companies');const d=await res.json();renderCompanies(d);}catch(e){}
+}
+function renderCompanies(list){
+  const el=$('company-list');el.innerHTML='';
+  if(!list.length){el.innerHTML='<div style="padding:16px 14px;font-size:11px;color:#444455;">No companies yet</div>';return;}
+  list.forEach(c=>{
+    const row=document.createElement('div');row.className='company-row';
+    row.innerHTML=`<button class="co-btn${c.id===S.selectedCompanyId?' active':''}" onclick="selectCompany(${c.id},'${c.name.replace(/'/g,"\\'")}')">${c.name}</button><button class="co-del" onclick="delCompany(${c.id},'${c.name.replace(/'/g,"\\'")}')">✕</button>`;
+    el.appendChild(row);
+  });
+}
+function selectCompany(id,name){
+  S.selectedCompanyId=id;S.selectedCompanyName=name;
+  $('co-badge-name').textContent=name;$('co-badge').classList.remove('hidden');
+  loadCompanies();
+}
+async function addCompany(){
+  const name=$('new-company').value.trim();if(!name)return;
+  try{await apiJSON('/api/companies',{name});$('new-company').value='';loadCompanies();}
+  catch(e){alert(e.message);}
+}
+async function delCompany(id,name){
+  if(!confirm(`Delete '${name}' and its history?`))return;
+  try{
+    await apiFetch(`/api/companies/${id}`,{method:'DELETE'});
+    if(S.selectedCompanyId===id){S.selectedCompanyId=null;S.selectedCompanyName=null;$('co-badge').classList.add('hidden');}
+    loadCompanies();
+  }catch(e){alert(e.message);}
+}
+
+// ── SCREEN 1 ──
+function selectType(t){
+  S.ledgerType=t;
+  $('tc-sale').classList.toggle('selected',t==='sale');
+  $('tc-purchase').classList.toggle('selected',t==='purchase');
+}
+
+// ── SCREEN 2 ──
+function handleFileSelect(e){addFiles(Array.from(e.target.files));}
+function handleDrop(e){e.preventDefault();$('dropzone').classList.remove('drag-over');addFiles(Array.from(e.dataTransfer.files));}
+function addFiles(newFiles){
+  hideErr('upload-error');
+  for(const f of newFiles){
+    if(S.files.length>=5){showErr('upload-error','Maximum 5 files allowed.');break;}
+    const ext=f.name.toLowerCase().split('.').pop();
+    if(!['xlsx','xls','csv'].includes(ext)){showErr('upload-error',`${f.name}: only .xlsx/.xls/.csv accepted.`);continue;}
+    if(!S.files.find(x=>x.name===f.name))S.files.push(f);
+  }
+  renderFileList();$('upload-next-btn').disabled=(S.files.length===0);$('file-input').value='';
+}
+function removeFile(name){
+  S.files=S.files.filter(f=>f.name!==name);delete S.fileRowCounts[name];
+  renderFileList();$('upload-next-btn').disabled=(S.files.length===0);
+}
+function renderFileList(){
+  const el=$('file-list');el.innerHTML='';
+  S.files.forEach((f,i)=>{
+    const rows=S.fileRowCounts[f.name]?`<span class="fc-rows">${S.fileRowCounts[f.name]} rows</span>`:'';
+    el.innerHTML+=`<div class="file-chip"><span class="fc-num">${i+1}.</span><span class="fc-name">${f.name}</span>${rows}<button class="fc-remove" onclick="removeFile('${f.name.replace(/'/g,"\\'")}')">✕</button></div>`;
+  });
+}
+async function goToParams(){
+  if(!S.files.length)return;
+  hideErr('upload-error');setBtn('upload-next-btn',true,'Validating files…');
+  try{
+    const fd=new FormData();S.files.forEach(f=>fd.append('files',f));
+    const res=await fetch('/api/upload',{method:'POST',headers:{'Authorization':`Bearer ${S.token}`},body:fd});
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.detail||'Upload failed');
+    const failed=data.files.filter(f=>f.status==='error');
+    if(failed.length){showErr('upload-error',failed.map(f=>`${f.original_name}: ${f.error}`).join('\n'));setBtn('upload-next-btn',false,'Continue → Parameters');return;}
+    data.files.forEach(f=>{S.fileRowCounts[f.original_name]=f.row_count;});
+    renderFileList();
+    $('p-from').value='01-04-2024';$('p-to').value='31-03-2025';
+    $('p-drdays').value='0';$('p-crdays').value='0';
+    if(S.user&&!$('p-company').value)$('p-company').value=S.user.company_name;
+    setBtn('upload-next-btn',false,'Continue → Parameters');
+    showScreen(3);
+  }catch(e){showErr('upload-error',e.message);setBtn('upload-next-btn',false,'Continue → Parameters');}
+}
+
+// ── SCREEN 3 ──
+function goToRename(){
+  hideErr('params-error');
+  const rate=$('p-rate').value.trim();
+  if(!rate){showErr('params-error','Interest Rate is required.');return;}
+  if(isNaN(parseFloat(rate))){showErr('params-error','Interest Rate must be a number.');return;}
+  const client=$('p-client').value.trim()||'Client';
+  const renameEl=$('rename-rows');renameEl.innerHTML='';S.outputNames=[];
+  S.files.forEach((f,i)=>{
+    const stem=f.name.replace(/\.[^.]+$/,'');
+    const sug=`ANK_${client}_${stem}`;S.outputNames.push(sug+'.xlsx');
+    renameEl.innerHTML+=`<div class="rename-row"><div class="rename-src">${i+1}. Input: <strong>${f.name}</strong>${S.fileRowCounts[f.name]?` <span style="color:var(--muted);font-size:11px;">(${S.fileRowCounts[f.name]} rows)</span>`:''}</div><div class="rename-input-row"><input type="text" id="rn-${i}" value="${sug}" style="flex:1;"><span class="rename-ext">.xlsx</span></div></div>`;
+  });
+  showScreen(4);
+}
+
+// ── SCREEN 4 ──
+function goToExport(){
+  hideErr('rename-error');const names=[];
+  for(let i=0;i<S.files.length;i++){
+    const raw=$(`rn-${i}`).value.trim();
+    if(!raw){showErr('rename-error',`File ${i+1}: output name cannot be empty.`);return;}
+    names.push(raw.replace(/[\/\\]/g,'_')+'.xlsx');
+  }
+  S.outputNames=names;
+  $('results-area').innerHTML='';hideErr('export-error');
+  $('gen-btn').disabled=false;$('gen-btn').textContent='⚡ Generate & Download All';
+  showScreen(5);
+}
+
+// ── SCREEN 5 ──
+async function generateAll(){
+  hideErr('export-error');setBtn('gen-btn',true,'Generating…');
+  $('results-area').innerHTML='';
+  S.files.forEach((f,i)=>{
+    $('results-area').innerHTML+=`<div class="result-card" id="rc-${i}"><div class="result-icon">⏳</div><div class="result-body"><div class="result-filename">${S.outputNames[i]}</div><div class="result-status">Processing ${f.name}…</div></div></div>`;
+  });
+  try{
+    const fd=new FormData();
+    S.files.forEach(f=>fd.append('files',f));
+    fd.append('company_name',$('p-company').value||'Company');
+    fd.append('client_name',$('p-client').value||'Client');
+    fd.append('from_date',$('p-from').value);
+    fd.append('to_date',$('p-to').value);
+    fd.append('interest_rate',$('p-rate').value);
+    fd.append('ledger_type',S.ledgerType);
+    fd.append('debit_days',$('p-drdays').value||0);
+    fd.append('credit_days',$('p-crdays').value||0);
+    fd.append('manual_interest',$('p-manual').value||0);
+    fd.append('output_filenames',JSON.stringify(S.outputNames));
+    fd.append('company_id',S.selectedCompanyId||0);
+    const res=await fetch('/api/process',{method:'POST',headers:{'Authorization':`Bearer ${S.token}`},body:fd});
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.detail||'Processing failed');
+    S.jobResults=data.results;
+    data.results.forEach((r,i)=>renderResult(r,i));
+    $('gen-btn').disabled=false;$('gen-btn').textContent='↺ Regenerate All';
+  }catch(e){
+    showErr('export-error',e.message);
+    $('gen-btn').disabled=false;$('gen-btn').textContent='⚡ Generate & Download All';
+  }
+}
+
+function renderResult(r,i){
+  const el=$(`rc-${i}`);if(!el)return;
+  if(r.status==='success'){
+    el.innerHTML=`<div class="result-icon">✅</div><div class="result-body"><div class="result-filename">${r.filename}</div><div class="result-status ok">✓ ${r.row_count} transactions processed</div><div class="result-summary"><div class="rs-cell"><div class="rs-label">Total Debit</div><div class="rs-value dr">₹ ${fmt(r.total_debit)}</div></div><div class="rs-cell"><div class="rs-label">Total Credit</div><div class="rs-value cr">₹ ${fmt(r.total_credit)}</div></div><div class="rs-cell"><div class="rs-label">Net Balance</div><div class="rs-value">₹ ${fmt(Math.abs(r.net_balance))} ${r.net_balance_label}</div></div><div class="rs-cell"><div class="rs-label">Net ANK</div><div class="rs-value">${fmt(Math.abs(r.net_ank))} ${r.net_ank_label}</div></div><div class="rs-cell"><div class="rs-label">Interest</div><div class="rs-value">₹ ${fmt(r.interest)}</div></div><div class="rs-cell"><div class="rs-label">Avg Days</div><div class="rs-value">${fmt(r.avg_days)} days</div></div></div></div><div class="result-actions"><button class="btn btn-green" style="height:38px;font-size:13px;" onclick="dlFile('${r.job_id}','${r.filename.replace(/'/g,"\\'")}')">⬇ Download</button></div>`;
+  }else{
+    el.innerHTML=`<div class="result-icon">❌</div><div class="result-body"><div class="result-filename">${r.filename}</div><div class="result-status err">Error: ${r.error||'Processing failed'}</div></div>`;
+  }
+}
+
+async function dlFile(jobId,filename){
+  try{
+    const res=await fetch(`/api/download/${jobId}`,{headers:{'Authorization':`Bearer ${S.token}`}});
+    if(!res.ok){const d=await res.json();alert(d.detail||'Download failed');return;}
+    const blob=await res.blob(),url=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url);
+  }catch(e){alert('Download error: '+e.message);}
+}
+
+function startOver(){
+  S.files=[];S.fileRowCounts={};S.outputNames=[];S.jobResults=[];
+  $('file-list').innerHTML='';$('upload-next-btn').disabled=true;
+  ['p-company','p-client','p-from','p-to','p-rate','p-manual'].forEach(id=>{const e=$(id);if(e)e.value='';});
+  $('p-drdays').value='0';$('p-crdays').value='0';
+  $('results-area').innerHTML='';selectType('sale');showScreen(1);
+}
+
+// ── ADMIN ──
+let _adminPwd='';
+function openAdmin(){
+  $('admin-overlay').classList.remove('hidden');
+  $('admin-auth').classList.remove('hidden');$('admin-panel').classList.add('hidden');
+  $('admin-pwd').value='';hideErr('admin-auth-err');$('new-code-display').textContent='';
+}
+function closeAdmin(){$('admin-overlay').classList.add('hidden');}
+async function checkAdminAuth(){
+  _adminPwd=$('admin-pwd').value;if(!_adminPwd){showErr('admin-auth-err','Enter admin password.');return;}
+  try{
+    await apiJSON('/api/admin/invites',{admin_password:_adminPwd});
+    $('admin-auth').classList.add('hidden');$('admin-panel').classList.remove('hidden');
+    loadAdminData();
+  }catch(e){showErr('admin-auth-err','Incorrect admin password.');}
+}
+function switchTab(tab){
+  ['invites','users'].forEach(t=>{$(`tab-pane-${t}`).classList.toggle('active',t===tab);});
+  document.querySelectorAll('.admin-tab').forEach((btn,i)=>{btn.classList.toggle('active',['invites','users'][i]===tab);});
+}
+async function loadAdminData(){await Promise.all([loadInvites(),loadUsers()]);}
+async function generateInvite(){
+  try{
+    const d=await apiJSON('/api/admin/invite',{admin_password:_adminPwd});
+    $('new-code-display').textContent=`✓  ${d.code}  — copy and send to user`;
+    await loadInvites();
+  }catch(e){alert(e.message);}
+}
+async function loadInvites(){
+  try{
+    const d=await apiJSON('/api/admin/invites',{admin_password:_adminPwd});
+    const el=$('invites-table');
+    if(!d.invites||!d.invites.length){el.innerHTML='<p style="color:var(--muted);font-size:13px;padding:8px 0;">No invite codes yet.</p>';return;}
+    el.innerHTML=`<table class="data-table"><thead><tr><th>Code</th><th>Status</th><th>Created</th><th>Used By</th><th></th></tr></thead><tbody>${d.invites.map(c=>`<tr><td style="font-family:monospace;letter-spacing:1px;font-size:12px;">${c.code}</td><td><span class="badge ${c.is_used?'badge-gray':'badge-green'}">${c.is_used?'Used':'Active'}</span></td><td style="color:var(--muted);">${(c.created_at||'').slice(0,10)}</td><td style="color:var(--muted);">${c.used_by_name||'—'}</td><td>${!c.is_used?`<button onclick="delInvite(${c.id})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:13px;">✕</button>`:''}</td></tr>`).join('')}</tbody></table>`;
+  }catch(e){}
+}
+async function delInvite(id){
+  if(!confirm('Delete this invite code?'))return;
+  try{await apiJSON(`/api/admin/invites/${id}/delete`,{admin_password:_adminPwd});await loadInvites();}
+  catch(e){alert(e.message);}
+}
+async function loadUsers(){
+  try{
+    const d=await apiJSON('/api/admin/users',{admin_password:_adminPwd});
+    const el=$('users-table');
+    if(!d.users||!d.users.length){el.innerHTML='<p style="color:var(--muted);font-size:13px;padding:8px 0;">No registered users yet.</p>';return;}
+    el.innerHTML=`<table class="data-table"><thead><tr><th>Name</th><th>Email</th><th>Company</th><th>Status</th><th>T&amp;C</th><th></th></tr></thead><tbody>${d.users.map(u=>`<tr><td>${u.full_name}</td><td style="color:var(--muted);font-size:11px;">${u.email}</td><td style="color:var(--muted);">${u.company_name}</td><td><span class="badge ${u.is_active?'badge-green':'badge-red'}">${u.is_active?'Active':'Suspended'}</span></td><td><span class="badge ${u.tc_accepted?'badge-green':'badge-red'}">${u.tc_accepted?'✓':'✗'}</span></td><td><button onclick="toggleUser(${u.id},${u.is_active})" style="background:${u.is_active?'var(--red)':'var(--green)'};color:#fff;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;">${u.is_active?'Suspend':'Activate'}</button></td></tr>`).join('')}</tbody></table>`;
+  }catch(e){}
+}
+async function toggleUser(id,curr){
+  if(!confirm(`${curr?'Suspend':'Activate'} this user?`))return;
+  try{await apiJSON(`/api/admin/users/${id}/toggle`,{admin_password:_adminPwd,is_active:!curr});await loadUsers();}
+  catch(e){alert(e.message);}
+}
+</script>
+</body>
+</html>
