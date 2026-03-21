@@ -353,14 +353,11 @@ input:focus{border-color:var(--navy);}
         </div>
         <div class="info-box">Leave Manual Interest blank to use formula: (Total Debit × Rate) / 30</div>
         <div class="sec-label">Day Offsets <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:11px;color:var(--muted);">(optional)</span></div>
-        <div class="info-box">
-          <strong style="color:#F5F0E8;">Debit Days</strong> — credit period you give the buyer (reduces DR ANK).<br>
-          <strong style="color:#F5F0E8;">Credit Days</strong> — credit period you received from supplier (reduces CR ANK).
-        </div>
+        <div class="info-box" id="days-info-box"><!-- filled by selectType --></div>
         <div class="grid-2">
-          <div class="field"><label>Debit Days</label>
+          <div class="field" id="drdays-field"><label>Debit Days</label>
             <input type="number" id="p-drdays" value="0" min="0" step="1"></div>
-          <div class="field"><label>Credit Days</label>
+          <div class="field hidden" id="crdays-field"><label>Credit Days</label>
             <input type="number" id="p-crdays" value="0" min="0" step="1"></div>
         </div>
         <div class="nav-row">
@@ -615,6 +612,24 @@ function selectType(t){
   S.ledgerType=t;
   $('tc-sale').classList.toggle('selected',t==='sale');
   $('tc-purchase').classList.toggle('selected',t==='purchase');
+  // Update day offset UI for screen 3
+  const isSale = t==='sale';
+  const drField = $('drdays-field');
+  const crField = $('crdays-field');
+  const infoBox = $('days-info-box');
+  if(drField && crField){
+    if(isSale){
+      drField.classList.remove('hidden');
+      crField.classList.add('hidden');
+      $('p-crdays').value='0';
+      if(infoBox) infoBox.innerHTML='<strong style="color:#F5F0E8;">Debit Days</strong> — credit period you give the buyer (reduces DR ANK).';
+    } else {
+      crField.classList.remove('hidden');
+      drField.classList.add('hidden');
+      $('p-drdays').value='0';
+      if(infoBox) infoBox.innerHTML='<strong style="color:#F5F0E8;">Credit Days</strong> — credit period you received from supplier (reduces CR ANK).';
+    }
+  }
 }
 
 // ── SCREEN 2 ──
