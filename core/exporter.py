@@ -17,8 +17,8 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
-from core.config import EXCEL_STYLE as S
-from core.summarizer import Summary
+from config import EXCEL_STYLE as S
+from summarizer import Summary
 
 
 @dataclass
