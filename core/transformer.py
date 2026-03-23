@@ -38,10 +38,6 @@ def transform(
     """
     df = df.copy()
 
-    # Swap columns for Purchase — buyer perspective
-    if ledger_type == LedgerType.PURCHASE:
-        df["debit"], df["credit"] = df["credit"].copy(), df["debit"].copy()
-
     raw_days = compute_days(df["date"], to_date)
     df["debit_days_col"]  = (raw_days - debit_days).clip(lower=0)
     df["credit_days_col"] = (raw_days - credit_days).clip(lower=0)
