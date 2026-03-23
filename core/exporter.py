@@ -3,20 +3,21 @@ core/exporter.py
 ----------------
 Builds the formatted Excel output using openpyxl.
 
-Column layout (10 cols total):
+Column layout (10 cols):
 
   Sale (DR offset):
     DATE | BILL NO. | DEBIT AMT. | TD | CD | UD | ANK AMT. | CREDIT AMT. | DAYS | ANK AMT.
     col:    1    2       3         4   5   6     7             8             9      10
 
   Purchase (CR offset):
-    DATE | BILL NO. | DEBIT AMT. | DAYS | ANK AMT. | CREDIT AMT. | TD | CD | UD | ANK AMT.
-    col:    1    2       3          4      5             6           7   8   9     10
+    DATE | BILL NO. | CREDIT AMT. | TD | CD | UD | ANK AMT. | DEBIT AMT. | DAYS | ANK AMT.
+    col:    1    2        3         4   5   6     7              8           9      10
 
+  All day values shown as "250 Days", "10 Days", "240 Days" etc.
   TD = Total Days  (raw days before offset)
   CD = Offset Days (user-entered, same every row)
   UD = Used Days   = TD - CD  <- used in ANK formula
-  DAYS = raw days, no offset (single column, shown as "188 Days")
+  DAYS = raw days, no offset (single column on the non-offset side)
 """
 
 from __future__ import annotations
@@ -53,9 +54,9 @@ class ExportMeta:
 #   1=DATE  2=BILL  3=DR_AMT  4=DR_TD  5=DR_CD  6=DR_UD  7=DR_ANK
 #   8=CR_AMT  9=CR_DAYS  10=CR_ANK
 #
-# Purchase:
-#   1=DATE  2=BILL  3=DR_AMT  4=DR_DAYS  5=DR_ANK
-#   6=CR_AMT  7=CR_TD  8=CR_CD  9=CR_UD  10=CR_ANK
+# Purchase (Credit before Debit):
+#   1=DATE  2=BILL  3=CR_AMT  4=CR_TD  5=CR_CD  6=CR_UD  7=CR_ANK
+#   8=DR_AMT  9=DR_DAYS  10=DR_ANK
 # ---------------------------------------------------------------------------
 
 _SALE_COLS = dict(
@@ -66,8 +67,8 @@ _SALE_COLS = dict(
 
 _PUR_COLS = dict(
     date=1, bill=2,
-    dr_amt=3, dr_days=4, dr_ank=5,
-    cr_amt=6, cr_td=7, cr_cd=8, cr_ud=9, cr_ank=10,
+    cr_amt=3, cr_td=4, cr_cd=5, cr_ud=6, cr_ank=7,
+    dr_amt=8, dr_days=9, dr_ank=10,
 )
 
 
@@ -154,14 +155,14 @@ def _write_meta_rows(ws, meta: ExportMeta, row: int) -> int:
 
 def _write_column_headers(ws, ledger_type: str, row: int) -> int:
     if ledger_type == "purchase":
-        # DR side: single DAYS | CR side: TD CD UD
+        # Credit first (with TD/CD/UD), then Debit (single DAYS)
         headers = [
             "DATE", "BILL NO.",
-            "DEBIT AMT.", "DAYS", "ANK AMT.",
             "CREDIT AMT.", "TD", "CD", "UD", "ANK AMT.",
+            "DEBIT AMT.", "DAYS", "ANK AMT.",
         ]
     else:
-        # DR side: TD CD UD | CR side: single DAYS
+        # Debit first (with TD/CD/UD), then Credit (single DAYS)
         headers = [
             "DATE", "BILL NO.",
             "DEBIT AMT.", "TD", "CD", "UD", "ANK AMT.",
@@ -188,38 +189,38 @@ def _write_data_rows(ws, df: pd.DataFrame, meta: ExportMeta, cols: dict, row: in
         ws.cell(row=row, column=cols["bill"], value=r["bill_no"])
 
         if is_sale:
-            # Debit side — TD / CD / UD / ANK
+            # Debit side — TD / CD / UD / ANK  (all values shown as "X Days")
             if r["debit"] > 0:
-                ud = int(r["debit_days_col"])   # UD (already offset-subtracted)
-                td = ud + cd_value              # TD = UD + CD
-                _num_cell(ws, row, cols["dr_amt"], r["debit"],         color=S.debit_font)
-                _num_cell(ws, row, cols["dr_td"],  td)
-                _num_cell(ws, row, cols["dr_cd"],  cd_value)
-                _num_cell(ws, row, cols["dr_ud"],  ud)
+                ud = int(r["debit_days_col"])
+                td = ud + cd_value
+                _num_cell(ws, row, cols["dr_amt"], r["debit"], color=S.debit_font)
+                _plain_cell(ws, row, cols["dr_td"],  f"{td} Days")
+                _plain_cell(ws, row, cols["dr_cd"],  f"{cd_value} Days")
+                _plain_cell(ws, row, cols["dr_ud"],  f"{ud} Days")
                 _num_cell(ws, row, cols["dr_ank"], round(r["debit_ank"]))
             # Credit side — single DAYS / ANK
             if r["credit"] > 0:
-                raw_days = int(r["credit_days_col"])  # no offset on credit for sale
-                _num_cell(ws, row, cols["cr_amt"],  r["credit"],       color=S.credit_font)
+                raw_days = int(r["credit_days_col"])
+                _num_cell(ws, row, cols["cr_amt"],  r["credit"], color=S.credit_font)
                 _plain_cell(ws, row, cols["cr_days"], f"{raw_days} Days")
                 _num_cell(ws, row, cols["cr_ank"],  round(r["credit_ank"]))
         else:
-            # Purchase
-            # Debit side — single DAYS / ANK
-            if r["debit"] > 0:
-                raw_days = int(r["debit_days_col"])   # no offset on debit for purchase
-                _num_cell(ws, row, cols["dr_amt"],  r["debit"],        color=S.debit_font)
-                _plain_cell(ws, row, cols["dr_days"], f"{raw_days} Days")
-                _num_cell(ws, row, cols["dr_ank"],  round(r["debit_ank"]))
+            # Purchase — Credit first (TD/CD/UD), then Debit (single DAYS)
             # Credit side — TD / CD / UD / ANK
             if r["credit"] > 0:
                 ud = int(r["credit_days_col"])
                 td = ud + cd_value
-                _num_cell(ws, row, cols["cr_amt"], r["credit"],        color=S.credit_font)
-                _num_cell(ws, row, cols["cr_td"],  td)
-                _num_cell(ws, row, cols["cr_cd"],  cd_value)
-                _num_cell(ws, row, cols["cr_ud"],  ud)
+                _num_cell(ws, row, cols["cr_amt"], r["credit"], color=S.credit_font)
+                _plain_cell(ws, row, cols["cr_td"],  f"{td} Days")
+                _plain_cell(ws, row, cols["cr_cd"],  f"{cd_value} Days")
+                _plain_cell(ws, row, cols["cr_ud"],  f"{ud} Days")
                 _num_cell(ws, row, cols["cr_ank"], round(r["credit_ank"]))
+            # Debit side — single DAYS / ANK
+            if r["debit"] > 0:
+                raw_days = int(r["debit_days_col"])
+                _num_cell(ws, row, cols["dr_amt"],  r["debit"], color=S.debit_font)
+                _plain_cell(ws, row, cols["dr_days"], f"{raw_days} Days")
+                _num_cell(ws, row, cols["dr_ank"],  round(r["debit_ank"]))
 
         row += 1
     return row
@@ -231,6 +232,7 @@ def _write_totals(ws, ledger_type: str, cols: dict, data_start: int, data_end: i
     ws.cell(row=row, column=1, value="TOTAL:").font = Font(name=S.body_font_name, bold=True)
     ws.cell(row=row, column=1).fill = fill
 
+    # Sum only the amount and ANK columns (not the Days text columns)
     sum_cols = [
         (cols["dr_amt"], S.debit_font),
         (cols["dr_ank"], S.debit_font),
@@ -319,11 +321,11 @@ def _write_summary(
 
 def _set_column_widths(ws, ledger_type: str) -> None:
     if ledger_type == "purchase":
-        # DATE | BILL | DR_AMT | DAYS | DR_ANK | CR_AMT | TD | CD | UD | CR_ANK
-        widths = [13, 10, 13, 11, 13, 13, 10, 10, 10, 13]
+        # DATE | BILL | CR_AMT | TD | CD | UD | CR_ANK | DR_AMT | DAYS | DR_ANK
+        widths = [13, 10, 13, 11, 11, 11, 13, 13, 11, 13]
     else:
         # DATE | BILL | DR_AMT | TD | CD | UD | DR_ANK | CR_AMT | DAYS | CR_ANK
-        widths = [13, 10, 13, 10, 10, 10, 13, 13, 11, 13]
+        widths = [13, 10, 13, 11, 11, 11, 13, 13, 11, 13]
     for i, w in enumerate(widths, 1):
         ws.column_dimensions[get_column_letter(i)].width = w
 
