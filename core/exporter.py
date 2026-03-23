@@ -17,8 +17,8 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
-from core.config import EXCEL_STYLE as S
-from core.summarizer import Summary
+from config import EXCEL_STYLE as S
+from summarizer import Summary
 
 
 @dataclass
@@ -30,9 +30,7 @@ class ExportMeta:
     interest_rate:   float
     debit_days:      int   = 0    # days subtracted from debit side
     credit_days:     int   = 0    # days subtracted from credit side
-    manual_interest: float = 0.0
-    ledger_type:     str   = "sale"
-    output_filename: str   = ""
+    manual_interest: float = 0.0  # 0 = use computed; >0 = override
 
 
 # ---------------------------------------------------------------------------
