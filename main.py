@@ -36,7 +36,7 @@ from db.auth import (
     validate_access_key,
     verify_session_token,
 )
-from db.connection import initialise_db
+from db.schema import initialise_db
 from core.exporter import ExportMeta, export
 from core.loader import LoadError, load_ledger
 from core.summarizer import summarize
